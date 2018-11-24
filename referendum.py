@@ -48,7 +48,6 @@ class CommandLine:
         counter = 0
         data = dict()
         cases = dict()
-        l = []
         for line in results:
             if counter % 2 == 0:
                 cases[int(counter / 2)] = dict(
