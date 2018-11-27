@@ -6,6 +6,8 @@ import requests
 from bs4 import BeautifulSoup
 from fire import Fire
 
+from region import Regions
+
 
 class COLOR:
     HEADER = '\033[95m'
@@ -34,9 +36,28 @@ BILLS = {
 
 class CommandLine:
 
+    def __init__(self):
+        self.url = 'http://referendum.2018.nat.gov.tw/pc/zh_TW/00/00000000000000000.html'
+
+    def visualization(self, nth, cut_off_ratio):
+        text = []
+        text.append(BILLS.get((nth-7)*2))
+
+        rg = Regions()
+        for region in rg.regions:
+            self.url = 'http://referendum.2018.nat.gov.tw/pc/zh_TW/' + '%02d' % (nth-6) + '/' + region.url
+            result = self.get_source()
+            vote_rate = result[1][2]
+            rate = result[1][3]
+            if region.name == '全臺灣全區' or \
+                float(rate.replace('%', '')) >= cut_off_ratio:
+                text.append('%s\t投票率:%s\t同意(%%):%s' % (region.name, vote_rate, rate))
+            
+        return text
+
+
     def get_source(self):
-        URL = 'http://referendum.2018.nat.gov.tw/pc/zh_TW/00/00000000000000000.html'
-        response = requests.get(URL).text
+        response = requests.get(self.url).text
         bs = BeautifulSoup(response, features='lxml')
         results = []
         for x in bs.select('tr.trT'):
@@ -46,7 +67,7 @@ class CommandLine:
     def restruct(self):
         results = self.get_source()
         counter = 0
-        data = dict()
+        #data = dict()
         cases = dict()
         for line in results:
             if counter % 2 == 0:
@@ -69,7 +90,7 @@ class CommandLine:
         return cases
 
     def outcome(self):
-        cases = self.restruct()
+        #cases = self.restruct()
         cate = ['nuclear', 'nuclear', 'nuclear', 'sexual', 'sexual', 'sexual', 'naming', 'sexual', 'sexual', 'nuclear']
         lines = []
         for key, case in self.restruct().items():
